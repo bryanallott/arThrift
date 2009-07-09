@@ -1,0 +1,19 @@
+require 'rubygems'
+require 'active_record'
+require 'yaml'
+task :default => :migrate
+
+desc "Migrate the database through scripts in 'migrations'. Target specific version with VERSION=x"
+task :migrate => :environment do
+  ActiveRecord::Migrator.migrate('db/migrate', ENV["VERSION"] ? ENV["VERSION"].to_i : nil )
+end
+
+task :environment do
+  MY_ENV = (ENV['MY_ENV'] ||= 'development')
+  dbconfig = YAML::load(File.open('config/database.yml'))[MY_ENV]
+  ActiveRecord::Base.establish_connection(dbconfig)
+
+  ActiveRecord::Base.colorize_logging = false
+  logFile = File.open('db/database.log', 'w')
+  ActiveRecord::Base.logger = Logger.new(logFile)
+end
